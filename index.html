@@ -54,7 +54,13 @@
         <!-- Start Screen -->
         <div id="start-screen">
             <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-4">Examen de Filosofía y Psicología</h1>
-            <p class="text-center text-gray-600 dark:text-gray-300 mb-8">Selecciona una opción para comenzar.</p>
+            <p class="text-center text-gray-600 dark:text-gray-300 mb-6">Selecciona una opción para comenzar.</p>
+            <div class="flex items-center justify-center mb-6">
+                <input id="keep-order-checkbox" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                <label for="keep-order-checkbox" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                    Mantener el mismo orden de preguntas
+                </label>
+            </div>
             <div class="grid grid-cols-1 gap-4">
                 <button id="start-new-quiz-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800">
                     Hacer Examen
@@ -70,6 +76,9 @@
             <div id="header" class="flex flex-wrap justify-between items-center mb-6 gap-4">
                 <h2 class="text-xl font-semibold">Pregunta <span id="question-number"></span> de <span id="total-questions"></span></h2>
                 <div class="flex items-center gap-2 md:gap-4">
+                    <button id="restart-quiz-btn" class="px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-all duration-200">
+                        Reiniciar
+                    </button>
                     <button id="jump-to-last-btn" class="px-3 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold text-sm transition-all duration-200">
                         Pregunta Final
                     </button>
@@ -190,10 +199,12 @@
         const resultsScreen = document.getElementById('results-screen');
         const startNewQuizBtn = document.getElementById('start-new-quiz-btn');
         const reviewLastQuizBtn = document.getElementById('review-last-quiz-btn');
+        const keepOrderCheckbox = document.getElementById('keep-order-checkbox');
         const nextBtn = document.getElementById('next-btn');
         const restartBtn = document.getElementById('restart-btn');
         const reviewBtn = document.getElementById('review-btn');
         const jumpToLastBtn = document.getElementById('jump-to-last-btn');
+        const restartQuizBtn = document.getElementById('restart-quiz-btn');
         const questionNumberEl = document.getElementById('question-number');
         const totalQuestionsEl = document.getElementById('total-questions');
         const scoreEl = document.getElementById('score');
@@ -230,7 +241,11 @@
                 currentQuestionIndex = 0;
                 score = 0;
                 shuffledQuestions = [...quizData];
-                shuffleArray(shuffledQuestions);
+                
+                if (!keepOrderCheckbox.checked) {
+                    shuffleArray(shuffledQuestions);
+                }
+                
                 saveState();
             }
             
@@ -250,7 +265,6 @@
             questionNumberEl.textContent = currentQuestionIndex + 1;
             questionTextEl.textContent = currentQuestion.question;
             
-            // Manage visibility of the jump-to-last button
             if (currentQuestionIndex >= shuffledQuestions.length - 1) {
                 jumpToLastBtn.classList.add('hidden');
             } else {
@@ -258,7 +272,9 @@
             }
             
             const options = [...currentQuestion.options];
-            shuffleArray(options);
+            if (!keepOrderCheckbox.checked) {
+                shuffleArray(options);
+            }
 
             options.forEach(optionText => {
                 const button = document.createElement('button');
@@ -302,7 +318,7 @@
             correctAnswerDisplayEl.innerHTML = `Respuesta correcta: <span class="text-green-500">${correctAnswer}</span>`;
             saveState();
             nextBtn.classList.remove('hidden');
-            jumpToLastBtn.classList.add('hidden'); // Hide jump button after answering
+            jumpToLastBtn.classList.add('hidden');
         }
 
         function handleNextButton() {
@@ -333,7 +349,7 @@
             starRatingEl.innerHTML = generateStars(percentage);
 
             let message = '';
-            if (percentage === 100) message = '¡Felicidades! Tienes un conocimiento excepcional.  ';
+            if (percentage === 100) message = '¡Felicidades! Tienes un conocimiento excepcional. 🎓';
             else if (percentage >= 80) message = '¡Excelente trabajo! Dominas la mayoría de los temas. 👍';
             else if (percentage >= 60) message = '¡Buen intento! Sigue estudiando para mejorar. 📚';
             else message = 'Necesitas repasar un poco más. ¡No te rindas! 💪';
@@ -378,7 +394,7 @@
                         resumeModal.classList.add('hidden');
                         startQuiz();
                     };
-                    return; // Stop further initialization if resume modal is shown
+                    return;
                 }
             }
 
@@ -418,9 +434,12 @@
         });
         nextBtn.addEventListener('click', handleNextButton);
         jumpToLastBtn.addEventListener('click', jumpToLastQuestion);
+        restartQuizBtn.addEventListener('click', () => {
+            quizScreen.classList.add('hidden');
+            initializeApp();
+        });
         restartBtn.addEventListener('click', () => {
             resultsScreen.classList.add('hidden');
-            startScreen.classList.remove('hidden');
             initializeApp();
         });
         reviewBtn.addEventListener('click', () => showReviewModal(shuffledQuestions));
