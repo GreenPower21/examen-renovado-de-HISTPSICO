@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen de Filosofía y Psicología</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .option-btn.correct {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        .option-btn.incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+        .star-rating .fa-star {
+            color: #f59e0b; /* amber-500 */
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.6);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-500">
+        
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-4">Examen de Filosofía y Psicología</h1>
+            <p class="text-center text-gray-600 dark:text-gray-300 mb-8">Selecciona una opción para comenzar.</p>
+            <div class="grid grid-cols-1 gap-4">
+                <button id="start-new-quiz-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800">
+                    Hacer Examen
+                </button>
+                <button id="review-last-quiz-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 hidden">
+                    Revisar Último Examen
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div id="header" class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                <h2 class="text-xl font-semibold">Pregunta <span id="question-number"></span> de <span id="total-questions"></span></h2>
+                <div class="flex items-center gap-2 md:gap-4">
+                    <button id="jump-to-last-btn" class="px-3 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold text-sm transition-all duration-200">
+                        Pregunta Final
+                    </button>
+                    <div class="text-lg font-bold bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-4 py-2 rounded-lg">Puntuación: <span id="score">0</span></div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl mb-6">
+                <p id="question-text" class="text-lg md:text-xl font-medium text-center"></p>
+            </div>
+
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+            <div id="feedback-container" class="mt-6 text-center">
+                <p id="feedback-text" class="text-lg font-medium h-8"></p>
+                <div id="correct-answer-display" class="mt-2 text-md text-gray-600 dark:text-gray-300 font-semibold h-12"></div>
+            </div>
+
+            <button id="next-btn" class="w-full mt-4 bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 hidden">
+                Siguiente Pregunta
+            </button>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">¡Examen completado!</h1>
+            <div class="bg-indigo-100 dark:bg-indigo-900 rounded-2xl p-8 my-8">
+                <p class="text-xl text-indigo-800 dark:text-indigo-200 mb-2">Tu puntuación final es:</p>
+                <p id="score-details" class="text-2xl font-bold text-indigo-700 dark:text-indigo-300"></p>
+                <p id="final-score" class="text-6xl font-extrabold text-indigo-600 dark:text-indigo-400 my-2"></p>
+                <div id="star-rating" class="text-3xl my-4"></div>
+                <p id="result-message" class="mt-4 text-lg font-medium text-indigo-700 dark:text-indigo-300"></p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="review-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105">
+                    Revisar Preguntas
+                </button>
+                <button id="restart-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105">
+                    Intentar de Nuevo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resume Modal -->
+    <div id="resume-modal" class="modal-backdrop hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-sm w-full">
+            <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Continuar Sesión</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">Hemos encontrado una sesión sin terminar. ¿Quieres continuar donde la dejaste?</p>
+            <div class="flex justify-end gap-4">
+                <button id="new-session-btn" class="px-6 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-semibold">Empezar de Nuevo</button>
+                <button id="resume-session-btn" class="px-6 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="modal-backdrop hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full relative modal-content">
+            <button id="close-review-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-2xl">&times;</button>
+            <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Revisión de Preguntas</h3>
+            <div id="review-list" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            { question: "¿Qué filósofo basó su pensamiento en el ser humano, la virtud, el bien y la justicia?", answer: "Sócrates", options: ["Platón", "Aristóteles", "Sócrates", "Kant"] },
+            { question: "¿Cómo se denomina el método creado por Sócrates que consiste en un diálogo para descubrir ideas propias?", answer: "La mayéutica", options: ["La mayéutica", "El Mito de la Caverna", "El Imperativo Categórico", "La tabula rasa"] },
+            { question: "¿Quién es el autor de la frase “La vida no examinada no merece la pena ser vivida”?", answer: "Sócrates", options: ["Platón", "Sócrates", "Aristóteles", "Descartes"] },
+            { question: "¿Qué pensador formuló la Teoría de las Ideas, diferenciando entre el mundo inteligible y el sensible?", answer: "Platón", options: ["Aristóteles", "Sócrates", "Kant", "Platón"] },
+            { question: "¿Qué recurso narrativo empleó Platón para ilustrar su teoría?", answer: "El Mito de la Caverna", options: ["La mayéutica", "El Mito de la Caverna", "La duda metódica", "El positivismo"] },
+            { question: "¿De quién es la expresión “El comportamiento humano deriva de tres fuentes principales: el deseo, la emoción y el conocimiento”?", answer: "Platón", options: ["Platón", "Sócrates", "Spinoza", "Locke"] },
+            { question: "¿Qué filósofo fue discípulo de Platón, tutor de Alejandro Magno y fundador del Liceo?", answer: "Aristóteles", options: ["Sócrates", "Platón", "Aristóteles", "Francis Bacon"] },
+            { question: "¿Quién estableció la clasificación del alma en vegetativa, animal y racional?", answer: "Aristóteles", options: ["Platón", "Aristóteles", "Descartes", "Wundt"] },
+            { question: "¿A quién pertenece la frase “La virtud no consiste en hacer lo que uno quiere, sino en querer lo que uno hace”?", answer: "Aristóteles", options: ["Sócrates", "Platón", "Aristóteles", "Kant"] },
+            { question: "¿Qué figura fue pionera del pensamiento empírico moderno y defensora de la observación y la experimentación?", answer: "Francis Bacon", options: ["René Descartes", "John Locke", "Francis Bacon", "Immanuel Kant"] },
+            { question: "¿Qué filósofo defendió que la mente humana nace como una 'tabula rasa' y que todo conocimiento se adquiere por experiencia?", answer: "John Locke", options: ["John Locke", "George Berkeley", "René Descartes", "Baruch Spinoza"] },
+            { question: "¿De quién es la frase “No hay nada en el intelecto, que no haya estado antes en los sentidos”?", answer: "John Locke", options: ["Platón", "Descartes", "John Locke", "Kant"] },
+            { question: "¿Quién planteó que la realidad solo existe si es percibida por una mente?", answer: "George Berkeley", options: ["John Locke", "George Berkeley", "David Hume", "Immanuel Kant"] },
+            { question: "Según Berkeley, ¿de dónde proviene el orden del universo?", answer: "De Dios, no de la materia", options: ["De las leyes físicas", "De la percepción humana", "De Dios, no de la materia", "Del azar"] },
+            { question: "¿Qué filósofo buscó una base indudable para el conocimiento y la certeza de la existencia?", answer: "René Descartes", options: ["Francis Bacon", "John Locke", "René Descartes", "Baruch Spinoza"] },
+            { question: "¿Qué distinción realizó Descartes entre las realidades materiales y las del pensamiento?", answer: "Res extensa y res cogitans", options: ["Mundo sensible e inteligible", "Res extensa y res cogitans", "A priori y a posteriori", "Fenómeno y noúmeno"] },
+            { question: "¿Quién acuñó la frase “Pienso, luego existo”?", answer: "René Descartes", options: ["Sócrates", "Platón", "Aristóteles", "René Descartes"] },
+            { question: "¿Qué pensador sostuvo que Dios y la Naturaleza son una misma sustancia (Deus sive Natura)?", answer: "Baruch Spinoza", options: ["René Descartes", "Baruch Spinoza", "Gottfried Leibniz", "Immanuel Kant"] },
+            { question: "¿Qué papel asignó Spinoza a las emociones en la experiencia humana?", answer: "Derivan del deseo de autopreservación", options: ["Son irracionales y deben suprimirse", "Son una guía moral", "Derivan del deseo de autopreservación", "Son ilusiones creadas por la mente"] },
+            { question: "¿Qué filósofo integró el racionalismo y el empirismo afirmando que la mente posee estructuras innatas?", answer: "Immanuel Kant", options: ["John Locke", "René Descartes", "Immanuel Kant", "Auguste Comte"] },
+            { question: "¿Qué principio moral universal formuló Kant?", answer: "El Imperativo Categórico", options: ["La regla de oro", "El utilitarismo", "El hedonismo", "El Imperativo Categórico"] },
+            { question: "¿De quién es la frase “El conocimiento es percepción convertida en una idea”?", answer: "Immanuel Kant", options: ["Locke", "Berkeley", "Kant", "Hegel"] },
+            { question: "¿Qué figura defendió el positivismo y estableció una jerarquía de seis ciencias?", answer: "Auguste Comte", options: ["Immanuel Kant", "Auguste Comte", "Wilhelm Wundt", "Karl Marx"] },
+            { question: "¿Quién es considerado el padre de la psicología moderna y tenía formación de fisiólogo?", answer: "Wilhelm Wundt", options: ["Sigmund Freud", "William James", "Wilhelm Wundt", "Franz Brentano"] },
+            { question: "¿Qué objetivo tenía la psicología estructural desarrollada por Wundt?", answer: "Analizar la conciencia en sus elementos básicos", options: ["Interpretar los sueños", "Modificar la conducta", "Analizar la conciencia en sus elementos básicos", "Estudiar el inconsciente"] },
+            { question: "¿En qué ciudad fundó Wundt el primer laboratorio de psicología experimental?", answer: "Leipzig, Alemania", options: ["Viena, Austria", "París, Francia", "Londres, Inglaterra", "Leipzig, Alemania"] },
+            { question: "¿Quién fue maestro de Sigmund Freud y Edmund Husserl?", answer: "Franz Brentano", options: ["Wilhelm Wundt", "Franz Brentano", "Jean-Martin Charcot", "Ernst Brücke"] },
+            { question: "¿Cómo definió Brentano la psicología?", answer: "Ciencia de los actos y procesos psíquicos con intencionalidad", options: ["Estudio del alma", "Ciencia de la conducta observable", "Ciencia de los actos y procesos psíquicos con intencionalidad", "Análisis de la estructura de la mente"] },
+            { question: "¿Quién desarrolló el psicoanálisis inspirado por Charcot y Breuer?", answer: "Sigmund Freud", options: ["Carl Jung", "Alfred Adler", "Sigmund Freud", "Wilhelm Wundt"] },
+            { question: "¿Qué figura del conductismo destacó por el condicionamiento operante en EE.UU.?", answer: "B. F. Skinner", options: ["John B. Watson", "Iván Pavlov", "B. F. Skinner", "Edward Thorndike"] },
+            { question: "¿De qué corriente filosófica procede el humanismo y quiénes fueron sus representantes más importantes?", answer: "Del existencialismo; Abraham Maslow, Carl Rogers y Rollo May", options: ["Del positivismo; Comte", "Del psicoanálisis; Freud", "Del conductismo; Skinner", "Del existencialismo; Abraham Maslow, Carl Rogers y Rollo May"] },
+            { question: "¿Qué etapas conforman la Pirámide de Maslow en orden?", answer: "Fisiología → Seguridad → Afiliación → Reconocimiento → Autorrealización", options: ["Seguridad → Fisiología → Afiliación → Autorrealización → Reconocimiento", "Fisiología → Seguridad → Afiliación → Reconocimiento → Autorrealización", "Fisiología → Afiliación → Seguridad → Reconocimiento → Autorrealización", "Autorrealización → Reconocimiento → Afiliación → Seguridad → Fisiología"] },
+            { question: "¿Qué rol desempeñaban los primeros psicólogos en México?", answer: "Actuaban como auxiliares de médicos y psiquiatras", options: ["Eran investigadores de tiempo completo", "Se dedicaban a la terapia privada exclusivamente", "Actuaban como auxiliares de médicos y psiquiatras", "No existía la profesión"] },
+            { question: "¿Qué institución creó la carrera de Psicología en México?", answer: "La UNAM", options: ["El IPN", "La UAM", "La UNAM", "El Tec de Monterrey"] },
+            { question: "¿Qué enfoques predominaron en México entre 1975 y 1990?", answer: "Conductismo, psicología transcultural y enfoque psiquiátrico-psicométrico", options: ["Psicoanálisis, humanismo y Gestalt", "Conductismo, psicología transcultural y enfoque psiquiátrico-psicométrico", "Cognitivo-conductual y sistémico", "Solo psicoanálisis"] },
+            { question: "¿En qué consistía el enfoque Psiquiátrico-Psicométrico aplicado en México?", answer: "Investigación sobre alcohol, drogas e inhalantes", options: ["Terapia de grupo para adicciones", "Desarrollo de pruebas de inteligencia", "Investigación sobre alcohol, drogas e inhalantes", "Análisis de la cultura mexicana"] },
+            { question: "¿Qué pretendía el enfoque Transcultural en México?", answer: "Desarrollar una psicología científica y mexicana", options: ["Traducir tests extranjeros", "Criticar la psicología occidental", "Desarrollar una psicología científica y mexicana", "Estudiar a los pueblos indígenas"] },
+            { question: "¿Quién lideró el Movimiento Conductista en México y qué defendía?", answer: "Emilio Ribes", options: ["Rogelio Díaz Guerrero", "Santiago Ramírez", "Emilio Ribes", "Erich Fromm"] },
+            { question: "¿Qué es el Freudo-Marxismo y quién lo introdujo en México?", answer: "Fusión del psicoanálisis con la Escuela de Frankfurt", options: ["Una crítica al capitalismo desde el conductismo", "Una terapia humanista con bases marxistas", "Fusión del psicoanálisis con la Escuela de Frankfurt", "Un movimiento político liderado por Freud"] },
+            { question: "¿Quién dijo “No hay nada en el intelecto, que no haya estado antes en los sentidos”?", answer: "John Locke", options: ["Aristóteles", "Platón", "John Locke", "Descartes"] },
+            { question: "¿Quién pronunció la frase “Pienso, luego existo”?", answer: "René Descartes", options: ["Kant", "Spinoza", "Sócrates", "René Descartes"] },
+            { question: "¿Quién sostuvo que “El conocimiento es percepción convertida en una idea”?", answer: "Immanuel Kant", options: ["Immanuel Kant", "Hume", "Leibniz", "Fichte"] },
+            { question: "¿Quién afirmó “La vida no examinada no merece la pena ser vivida”?", answer: "Sócrates", options: ["Aristóteles", "Sócrates", "Platón", "Epicuro"] },
+            { question: "¿Quién dijo “El comportamiento humano deriva de tres fuentes: el deseo, la emoción y el conocimiento”?", answer: "Platón", options: ["Platón", "Aristóteles", "Sócrates", "Los estoicos"] },
+            { question: "¿Quién declaró “La virtud no consiste en hacer lo que uno quiere, sino en querer lo que uno hace”?", answer: "Aristóteles", options: ["Séneca", "Marco Aurelio", "Platón", "Aristóteles"] }
+        ];
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const startNewQuizBtn = document.getElementById('start-new-quiz-btn');
+        const reviewLastQuizBtn = document.getElementById('review-last-quiz-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const reviewBtn = document.getElementById('review-btn');
+        const jumpToLastBtn = document.getElementById('jump-to-last-btn');
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const scoreEl = document.getElementById('score');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        const correctAnswerDisplayEl = document.getElementById('correct-answer-display');
+        const finalScoreEl = document.getElementById('final-score');
+        const scoreDetailsEl = document.getElementById('score-details');
+        const resultMessageEl = document.getElementById('result-message');
+        const starRatingEl = document.getElementById('star-rating');
+        const resumeModal = document.getElementById('resume-modal');
+        const resumeSessionBtn = document.getElementById('resume-session-btn');
+        const newSessionBtn = document.getElementById('new-session-btn');
+        const reviewModal = document.getElementById('review-modal');
+        const closeReviewBtn = document.getElementById('close-review-btn');
+        const reviewListEl = document.getElementById('review-list');
+
+        // --- State Variables ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+
+        // --- Functions ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startQuiz(fromSavedState = false) {
+            if (!fromSavedState) {
+                currentQuestionIndex = 0;
+                score = 0;
+                shuffledQuestions = [...quizData];
+                shuffleArray(shuffledQuestions);
+                saveState();
+            }
+            
+            scoreEl.textContent = score;
+            totalQuestionsEl.textContent = shuffledQuestions.length;
+            
+            startScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            questionNumberEl.textContent = currentQuestionIndex + 1;
+            questionTextEl.textContent = currentQuestion.question;
+            
+            // Manage visibility of the jump-to-last button
+            if (currentQuestionIndex >= shuffledQuestions.length - 1) {
+                jumpToLastBtn.classList.add('hidden');
+            } else {
+                jumpToLastBtn.classList.remove('hidden');
+            }
+            
+            const options = [...currentQuestion.options];
+            shuffleArray(options);
+
+            options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.textContent = optionText;
+                button.classList.add('option-btn', 'w-full', 'p-4', 'border-2', 'rounded-lg', 'text-left', 'transition-all', 'duration-200', 'bg-gray-100', 'dark:bg-gray-700', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-indigo-100', 'dark:hover:bg-indigo-900', 'hover:border-indigo-400');
+                button.addEventListener('click', () => selectAnswer(button, optionText, currentQuestion.answer));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            nextBtn.classList.add('hidden');
+            feedbackTextEl.textContent = '';
+            correctAnswerDisplayEl.textContent = '';
+            while (optionsContainer.firstChild) {
+                optionsContainer.removeChild(optionsContainer.firstChild);
+            }
+        }
+
+        function selectAnswer(selectedButton, selectedOption, correctAnswer) {
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+                if (button.textContent === correctAnswer) {
+                    button.classList.add('correct');
+                }
+            });
+
+            if (selectedOption === correctAnswer) {
+                score++;
+                scoreEl.textContent = score;
+                feedbackTextEl.textContent = "¡Correcto!";
+                feedbackTextEl.classList.add('text-green-500');
+                feedbackTextEl.classList.remove('text-red-500');
+            } else {
+                selectedButton.classList.add('incorrect');
+                feedbackTextEl.textContent = "Incorrecto.";
+                feedbackTextEl.classList.add('text-red-500');
+                feedbackTextEl.classList.remove('text-green-500');
+            }
+            
+            correctAnswerDisplayEl.innerHTML = `Respuesta correcta: <span class="text-green-500">${correctAnswer}</span>`;
+            saveState();
+            nextBtn.classList.remove('hidden');
+            jumpToLastBtn.classList.add('hidden'); // Hide jump button after answering
+        }
+
+        function handleNextButton() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+        
+        function jumpToLastQuestion() {
+            currentQuestionIndex = shuffledQuestions.length - 1;
+            showQuestion();
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            startScreen.classList.add('hidden');
+
+            localStorage.removeItem('quizState');
+            localStorage.setItem('lastQuizQuestions', JSON.stringify(shuffledQuestions));
+            
+            const percentage = Math.round((score / shuffledQuestions.length) * 100);
+            finalScoreEl.textContent = `${percentage}%`;
+            scoreDetailsEl.textContent = `${score} de ${shuffledQuestions.length} correctas`;
+            starRatingEl.innerHTML = generateStars(percentage);
+
+            let message = '';
+            if (percentage === 100) message = '¡Felicidades! Tienes un conocimiento excepcional.  ';
+            else if (percentage >= 80) message = '¡Excelente trabajo! Dominas la mayoría de los temas. 👍';
+            else if (percentage >= 60) message = '¡Buen intento! Sigue estudiando para mejorar. 📚';
+            else message = 'Necesitas repasar un poco más. ¡No te rindas! 💪';
+            resultMessageEl.textContent = message;
+        }
+
+        function generateStars(percentage) {
+            let stars = '';
+            const numStars = Math.round(percentage / 20);
+            for(let i = 0; i < 5; i++) {
+                stars += i < numStars ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+            }
+            return `<div class="star-rating">${stars}</div>`;
+        }
+
+        function saveState() {
+            const state = {
+                currentQuestionIndex,
+                score,
+                shuffledQuestions,
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem('quizState', JSON.stringify(state));
+        }
+
+        function initializeApp() {
+            const savedStateJSON = localStorage.getItem('quizState');
+            const fiveHours = 5 * 60 * 60 * 1000;
+            if (savedStateJSON) {
+                const savedState = JSON.parse(savedStateJSON);
+                const isRecent = (new Date().getTime() - savedState.timestamp) < fiveHours;
+                if (isRecent && savedState.currentQuestionIndex < savedState.shuffledQuestions.length) {
+                    resumeModal.classList.remove('hidden');
+                    resumeSessionBtn.onclick = () => {
+                        currentQuestionIndex = savedState.currentQuestionIndex;
+                        score = savedState.score;
+                        shuffledQuestions = savedState.shuffledQuestions;
+                        resumeModal.classList.add('hidden');
+                        startQuiz(true);
+                    };
+                    newSessionBtn.onclick = () => {
+                        resumeModal.classList.add('hidden');
+                        startQuiz();
+                    };
+                    return; // Stop further initialization if resume modal is shown
+                }
+            }
+
+            const lastQuizJSON = localStorage.getItem('lastQuizQuestions');
+            if (lastQuizJSON) {
+                reviewLastQuizBtn.classList.remove('hidden');
+            }
+            
+            startScreen.classList.remove('hidden');
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+        }
+        
+        function showReviewModal(questions) {
+            reviewListEl.innerHTML = '';
+            questions.forEach(q => {
+                const item = document.createElement('div');
+                item.classList.add('p-3', 'bg-gray-100', 'dark:bg-gray-700', 'rounded-lg');
+                item.innerHTML = `
+                    <p class="font-semibold text-gray-800 dark:text-gray-200">${q.question}</p>
+                    <p class="text-green-600 dark:text-green-400"><strong>Respuesta:</strong> ${q.answer}</p>
+                `;
+                reviewListEl.appendChild(item);
+            });
+            reviewModal.classList.remove('hidden');
+        }
+
+        // --- Event Listeners ---
+        window.addEventListener('load', initializeApp);
+        startNewQuizBtn.addEventListener('click', () => startQuiz());
+        reviewLastQuizBtn.addEventListener('click', () => {
+             const lastQuizJSON = localStorage.getItem('lastQuizQuestions');
+             if(lastQuizJSON) {
+                const questions = JSON.parse(lastQuizJSON);
+                showReviewModal(questions);
+             }
+        });
+        nextBtn.addEventListener('click', handleNextButton);
+        jumpToLastBtn.addEventListener('click', jumpToLastQuestion);
+        restartBtn.addEventListener('click', () => {
+            resultsScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            initializeApp();
+        });
+        reviewBtn.addEventListener('click', () => showReviewModal(shuffledQuestions));
+        closeReviewBtn.addEventListener('click', () => reviewModal.classList.add('hidden'));
+
+    </script>
+</body>
+</html>
